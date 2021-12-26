@@ -1,6 +1,7 @@
 package io.etd;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
@@ -18,6 +19,14 @@ public class Grid {
             this.y = y;
         }
     }
+    private enum Direction {
+        HORIZONTAL,
+        HORIZONTAL_INVERSE,
+        VERTICAL,
+        VERTICAL_INVERSE,
+        DIAGONAL,
+        DIAGONAL_INVERSE
+    }
 
     public Grid(int gridSize) {
         this.gridSize = gridSize;
@@ -31,15 +40,45 @@ public class Grid {
         }
     }
     public void fillGrid(List<String> words) {
+        Collections.shuffle(coordinates);
         for (String word : words) {
-            Collections.shuffle(coordinates);
-
             for (Coordinate coordinate : coordinates) {
                 int x = coordinate.x;
                 int y = coordinate.y;
-                if (wordFitsGrid(word, coordinate)) {
-                    for (char ch : word.toCharArray()) {
-                        grid[x][y++] = ch;
+                Direction direction = getDirectionForWord(word, coordinate);
+
+                if (direction != null) {
+                    switch(direction) {
+                        case HORIZONTAL -> {
+                            for (char ch : word.toCharArray()) {
+                                grid[x][y++] = ch;
+                            }
+                        }
+                        case HORIZONTAL_INVERSE -> {
+                            for (char ch : word.toCharArray()) {
+                                grid[x][y--] = ch;
+                            }
+                        }
+                        case VERTICAL -> {
+                            for (char ch : word.toCharArray()) {
+                                grid[x++][y] = ch;
+                            }
+                        }
+                        case VERTICAL_INVERSE -> {
+                            for (char ch : word.toCharArray()) {
+                                grid[x--][y] = ch;
+                            }
+                        }
+                        case DIAGONAL -> {
+                            for (char ch : word.toCharArray()) {
+                                grid[x++][y++] = ch;
+                            }
+                        }
+                        case DIAGONAL_INVERSE -> {
+                            for (char ch : word.toCharArray()) {
+                                grid[x--][y--] = ch;
+                            }
+                        }
                     }
                     break;
                 }
@@ -47,20 +86,87 @@ public class Grid {
         }
     }
 
-    private boolean wordFitsGrid(String word, Coordinate coordinate) {
-        int x = coordinate.x;
-        int y = coordinate.y;
+    private Direction getDirectionForWord(String word, Coordinate coordinate) {
+        List<Direction> directions = Arrays.asList(Direction.values());
+        Collections.shuffle(directions);
 
-        if (y + word.length() < gridSize) {
-            for (int i = 0; i < word.length(); ++i) {
-                if (grid[x][y + i] != '_') {
-                    return false;
-                }
+        for (Direction direction : directions) {
+            if (wordFitsDirection(word, coordinate, direction)) {
+                return direction;
             }
-            return true;
         }
 
-        return false;
+        return null;
+    }
+
+    private boolean wordFitsDirection(String word, Coordinate coordinate, Direction direction) {
+        int x = coordinate.x;
+        int y = coordinate.y;
+        int wordSize = word.length();
+
+        switch (direction) {
+            case HORIZONTAL -> {
+                if (y + wordSize > gridSize) {
+                    return false;
+                }
+                for (int i = 0; i < wordSize; ++i) {
+                    if (grid[x][y + i] != '_') {
+                        return false;
+                    }
+                }
+            }
+            case HORIZONTAL_INVERSE -> {
+                if (y < wordSize) {
+                    return false;
+                }
+                for (int i = 0; i < wordSize; ++i) {
+                    if (grid[x][y - i] != '_') {
+                        return false;
+                    }
+                }
+            }
+            case VERTICAL -> {
+                if (x + wordSize > gridSize) {
+                    return false;
+                }
+                for (int i = 0; i < wordSize; ++i) {
+                    if (grid[x + i][y] != '_') {
+                        return false;
+                    }
+                }
+            }
+            case VERTICAL_INVERSE -> {
+                if (x < wordSize) {
+                    return false;
+                }
+                for (int i = 0; i < wordSize; ++i) {
+                    if (grid[x - i][y] != '_') {
+                        return false;
+                    }
+                }
+            }
+            case DIAGONAL -> {
+                if (x + wordSize > gridSize || y + wordSize > gridSize) {
+                    return false;
+                }
+                for (int i = 0; i < wordSize; ++i) {
+                    if (grid[x + i][y + i] != '_') {
+                        return false;
+                    }
+                }
+            }
+            case DIAGONAL_INVERSE -> {
+                if (x < wordSize || y < wordSize) {
+                    return false;
+                }
+                for (int i = 0; i < wordSize; ++i) {
+                    if (grid[x - i][y - i] != '_') {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
     }
 
 
