@@ -39,7 +39,7 @@ public class Grid {
             }
         }
     }
-    public void fillGrid(List<String> words) {
+    public void fillGridWithProvidedWords(List<String> words) {
         Collections.shuffle(coordinates);
         for (String word : words) {
             for (Coordinate coordinate : coordinates) {
@@ -81,6 +81,19 @@ public class Grid {
                         }
                     }
                     break;
+                }
+            }
+        }
+        fillRestOfGridRandomized();
+    }
+
+    public void fillRestOfGridRandomized() {
+        String letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        for (int i = 0; i < gridSize; ++i) {
+            for (int j = 0; j < gridSize; ++j) {
+                if (grid[i][j] == '_') {
+                    int randomIdx = ThreadLocalRandom.current().nextInt(0, letters.length());
+                    grid[i][j] = letters.charAt(randomIdx);
                 }
             }
         }
