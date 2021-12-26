@@ -34,6 +34,7 @@ interpolated*.xml
 lib/
 manifest.yml
 out
+target/
 overridedb.*
 .flattened-pom.xml
 secrets.yml
