@@ -1,15 +1,15 @@
-package io.etd;
+package etd.io.wordsearchapi.services;
 
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
-public class Grid {
-    private int gridSize;
-    private char[][] grid;
-    private List<Coordinate> coordinates = new ArrayList<>();
+@Service
+public class WordGridService {
     private class Coordinate {
         int x;
         int y;
@@ -28,24 +28,22 @@ public class Grid {
         DIAGONAL_INVERSE
     }
 
-    public Grid(int gridSize) {
-        this.gridSize = gridSize;
-        grid = new char[gridSize][gridSize];
-
+    public char[][] generateGridWithProvidedWords(int gridSize, List<String> words) {
+        List<Coordinate> coordinates = new ArrayList<>();
+        char[][] grid = new char[gridSize][gridSize];
         for (int i = 0; i < gridSize; ++i) {
             for(int j = 0; j < gridSize; ++j) {
                 coordinates.add(new Coordinate(i, j));
                 grid[i][j] = '_';
             }
         }
-    }
-    public void fillGridWithProvidedWords(List<String> words) {
         Collections.shuffle(coordinates);
+
         for (String word : words) {
             for (Coordinate coordinate : coordinates) {
                 int x = coordinate.x;
                 int y = coordinate.y;
-                Direction direction = getDirectionForWord(word, coordinate);
+                Direction direction = getDirectionForWord(grid, word, coordinate);
 
                 if (direction != null) {
                     switch(direction) {
@@ -84,11 +82,14 @@ public class Grid {
                 }
             }
         }
-        fillRestOfGridRandomized();
+        fillRestOfGridRandomized(grid);
+        return grid;
     }
 
-    public void fillRestOfGridRandomized() {
+    public void fillRestOfGridRandomized(char[][] grid) {
         String letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        int gridSize = grid[0].length;
+
         for (int i = 0; i < gridSize; ++i) {
             for (int j = 0; j < gridSize; ++j) {
                 if (grid[i][j] == '_') {
@@ -99,12 +100,12 @@ public class Grid {
         }
     }
 
-    private Direction getDirectionForWord(String word, Coordinate coordinate) {
+    private Direction getDirectionForWord(char[][] grid, String word, Coordinate coordinate) {
         List<Direction> directions = Arrays.asList(Direction.values());
         Collections.shuffle(directions);
 
         for (Direction direction : directions) {
-            if (wordFitsDirection(word, coordinate, direction)) {
+            if (wordFitsDirection(grid, word, coordinate, direction)) {
                 return direction;
             }
         }
@@ -112,10 +113,11 @@ public class Grid {
         return null;
     }
 
-    private boolean wordFitsDirection(String word, Coordinate coordinate, Direction direction) {
+    private boolean wordFitsDirection(char[][] grid, String word, Coordinate coordinate, Direction direction) {
         int x = coordinate.x;
         int y = coordinate.y;
         int wordSize = word.length();
+        int gridSize = grid[0].length;
 
         switch (direction) {
             case HORIZONTAL -> {
@@ -183,7 +185,8 @@ public class Grid {
     }
 
 
-    public void displayGrid() {
+    public void displayGrid(char[][] grid) {
+        int gridSize = grid[0].length;
         for (int i = 0; i < gridSize; ++i) {
             for(int j = 0; j < gridSize; ++j) {
                 System.out.print(grid[i][j] + " ");
